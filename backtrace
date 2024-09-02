@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+import argparse
+import os
+import subprocess
+
+BACKTRACER = "xtensa-esp32-elf-addr2line"
+PLATFORMIO_PATH = os.path.expanduser("~/.platformio/packages/toolchain-xtensa-esp32/bin")
+FIRMWARE = ".pio/build/fujiapple-d32pro/firmware.elf"
+
+def build_argparser():
+  parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument("backtrace", nargs="+", help="input file")
+  parser.add_argument("--flag", action="store_true", help="flag to do something")
+  return parser
+
+def main():
+  args = build_argparser().parse_args()
+  cmd = [os.path.join(PLATFORMIO_PATH, BACKTRACER), "-aspCfire", FIRMWARE, *args.backtrace]
+  subprocess.run(cmd)
+  return
+
+if __name__ == '__main__':
+  exit(main() or 0)

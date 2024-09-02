@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+#
+# Created by FozzTexx
+
+import argparse
+import os
+import subprocess
+import json
+from pprint import pprint
+
+PLATFORMIO_INI = "platformio.ini"
+PLATFORMIO_GEN = "platformio-generated.ini"
+PLATFORMIO_PKG_DIR = os.path.expanduser("~/.platformio/packages")
+FRAMEWORK = "framework-espidf"
+FILE_TYPES = [".c", ".h", ".cpp"]
+
+def build_argparser():
+  parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument("directory", nargs="?", default=".", help="directory to search")
+  parser.add_argument("phrase", help="phrase to search for")
+  parser.add_argument("--espidf", action="store_true", help="search platformio espidf")
+  parser.add_argument("--all", action="store_true", help="search all text files")
+  parser.add_argument("-i", "--ignore-case", action="store_true", help="case insensitive")
+  parser.add_argument("-l", "--files-with-matches", action="store_true",
+                      help="list file names only")
+  
+  return parser
+
+def dictify(array):
+  if not isinstance(array, (list, tuple)):
+    return array
+  
+  d = dict()
+  for elem in array:
+    if isinstance(elem, (list, tuple)):
+      d[elem[0]] = dictify(elem[1])
+    else:
+      return array
+
+  return d
+    
+def locate_espidf_dir():
+  missing_ini = False
+  if not os.path.exists(PLATFORMIO_INI):
+    missing_ini = True
+    os.symlink(PLATFORMIO_GEN, PLATFORMIO_INI)
+
+  cmd = ["platformio", "project", "config", "--json-output"]
+  config = dictify(json.loads(subprocess.run(cmd, capture_output=True, text=True).stdout))
+  #pprint(config)
+  platform = config['platformio']['default_envs'][0]
+  framework = config['env:' + platform]['platform']
+
+  cmd = ["platformio", "platform", "show", framework, "--json-output"]
+  #print(cmd)
+  fw_config = json.loads(subprocess.run(cmd, capture_output=True, text=True).stdout)
+  for pkg in fw_config['packages']:
+    if pkg['name'] == FRAMEWORK:
+      version = pkg['version']
+      break
+
+  espidf_dir = os.path.join(PLATFORMIO_PKG_DIR, f"{FRAMEWORK}@{version}")
+  if not os.path.exists(espidf_dir):
+    espidf_dir = os.path.join(PLATFORMIO_PKG_DIR, FRAMEWORK)
+
+  if missing_ini:
+    os.unlink(PLATFORMIO_INI)
+
+  return espidf_dir
+
+def main():
+  args = build_argparser().parse_args()
+
+  directory = args.directory
+  if args.espidf:
+    directory = locate_espidf_dir()
+
+  cmd = ["find", directory]
+  
+
+  cmd.extend([
+    "-path", os.path.join(directory, ".git"), "-prune",
+    "-o", "(",
+  ])
+  if not args.all:
+    names = []
+    for t in FILE_TYPES:
+      if len(names):
+        names.append("-o")
+      names.extend(["-name", "*" + t])
+    cmd.extend(names)
+  else:
+    cmd.extend([
+      "-type", "f",
+      "-not", "-name", "*~",
+      "-not", "-name", "*.orig",
+    ])
+  cmd.append(")")
+    
+  cmd.extend(["-exec", "grep", "-IHn"])
+  if args.ignore_case:
+    cmd.extend(["-i"])
+  if args.files_with_matches:
+    cmd.extend(["-l"])
+  cmd.extend([args.phrase, "{}", ";"])
+
+  try:
+    subprocess.run(cmd)
+  except KeyboardInterrupt:
+    pass
+
+  return
+
+if __name__ == '__main__':
+  exit(main() or 0)
