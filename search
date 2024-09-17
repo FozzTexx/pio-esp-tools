@@ -20,16 +20,17 @@ def build_argparser():
   parser.add_argument("phrase", help="phrase to search for")
   parser.add_argument("--espidf", action="store_true", help="search platformio espidf")
   parser.add_argument("--all", action="store_true", help="search all text files")
+  parser.add_argument("--headers", action="store_true", help="search only .h files")
   parser.add_argument("-i", "--ignore-case", action="store_true", help="case insensitive")
   parser.add_argument("-l", "--files-with-matches", action="store_true",
                       help="list file names only")
-  
+
   return parser
 
 def dictify(array):
   if not isinstance(array, (list, tuple)):
     return array
-  
+
   d = dict()
   for elem in array:
     if isinstance(elem, (list, tuple)):
@@ -38,7 +39,7 @@ def dictify(array):
       return array
 
   return d
-    
+
 def locate_espidf_dir():
   missing_ini = False
   if not os.path.exists(PLATFORMIO_INI):
@@ -69,17 +70,23 @@ def locate_espidf_dir():
   return espidf_dir
 
 def main():
+  global FILE_TYPES
+
   args = build_argparser().parse_args()
 
   directory = args.directory
   if args.espidf:
     directory = locate_espidf_dir()
+  if args.headers:
+    FILE_TYPES= [".h", ]
 
   cmd = ["find", directory]
-  
+
 
   cmd.extend([
     "-path", os.path.join(directory, ".git"), "-prune",
+    "-o",
+    "-path", os.path.join(directory, ".pio"), "-prune",
     "-o", "(",
   ])
   if not args.all:
@@ -96,7 +103,7 @@ def main():
       "-not", "-name", "*.orig",
     ])
   cmd.append(")")
-    
+
   cmd.extend(["-exec", "grep", "-IHn"])
   if args.ignore_case:
     cmd.extend(["-i"])

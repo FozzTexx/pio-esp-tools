@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
+#
+# Created by FozzTexx
+
 import argparse
 import os
 import subprocess
+import json
 
-BACKTRACER = "xtensa-esp32-elf-addr2line"
+PLATFORMIO_INI = "platformio.ini"
+PLATFORMIO_GEN = "platformio-generated.ini"
 PLATFORMIO_PATH = os.path.expanduser("~/.platformio/packages/toolchain-xtensa-esp32/bin")
-FIRMWARE = ".pio/build/fujiapple-d32pro/firmware.elf"
+BACKTRACER = "xtensa-esp32-elf-addr2line"
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -13,9 +18,42 @@ def build_argparser():
   parser.add_argument("--flag", action="store_true", help="flag to do something")
   return parser
 
+def dictify(array):
+  if not isinstance(array, (list, tuple)):
+    return array
+
+  d = dict()
+  for elem in array:
+    if isinstance(elem, (list, tuple)):
+      d[elem[0]] = dictify(elem[1])
+    else:
+      return array
+
+  return d
+
+def get_platform():
+  missing_ini = False
+  if not os.path.exists(PLATFORMIO_INI):
+    missing_ini = True
+    os.symlink(PLATFORMIO_GEN, PLATFORMIO_INI)
+
+  cmd = ["platformio", "project", "config", "--json-output"]
+  config = dictify(json.loads(subprocess.run(cmd, capture_output=True, text=True).stdout))
+  platform = config['platformio']['default_envs'][0]
+
+  if missing_ini:
+    os.unlink(PLATFORMIO_INI)
+
+  return platform
+
 def main():
   args = build_argparser().parse_args()
-  cmd = [os.path.join(PLATFORMIO_PATH, BACKTRACER), "-aspCfire", FIRMWARE, *args.backtrace]
+
+  platform = get_platform()
+  firmware_path = f".pio/build/{platform}/firmware.elf"
+  
+  cmd = [os.path.join(PLATFORMIO_PATH, BACKTRACER), "-aspCfire",
+         firmware_path, *args.backtrace]
   subprocess.run(cmd)
   return
 
