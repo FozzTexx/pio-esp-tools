@@ -49,6 +49,10 @@ def get_platform():
 def main():
   args = build_argparser().parse_args()
 
+  if not os.path.exists(PLATFORMIO_INI) and not os.path.exists(PLATFORMIO_GEN):
+    print("Not in project directory")
+    exit(1)
+
   platform = get_platform()
   firmware_path = f".pio/build/{platform}/firmware.elf"
   

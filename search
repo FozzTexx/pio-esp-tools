@@ -74,6 +74,10 @@ def main():
 
   args = build_argparser().parse_args()
 
+  if not os.path.exists(PLATFORMIO_INI) and not os.path.exists(PLATFORMIO_GEN):
+    print("Not in project directory")
+    exit(1)
+
   directory = args.directory
   if args.espidf:
     directory = locate_espidf_dir()
