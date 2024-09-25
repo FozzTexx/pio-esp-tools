@@ -68,7 +68,6 @@ def main():
   commit_id_long = run_command(["git", "rev-parse", "HEAD"])
 
   if modified:
-    version += "*"
     mtime = None
     for path in modified:
       mt = os.path.getmtime(path)
@@ -78,15 +77,18 @@ def main():
     mtime = int(run_command(["git", "show", "--no-patch", "--format=%ct", "HEAD"]))
 
   macros = {
-    'FN_VERSION_FULL': version,
     'FN_VERSION_BUILD': commit_id_long,
   }
 
-  m = re.match(r"^v([0-9]+)[.]([0-9]+)[.]", version)
+  m = re.match(r"^v([0-9]+)[.]([0-9]+)[.]([0-9]+)-([0-9]+)-g(.*)", version)
   if m:
     macros['FN_VERSION_MAJOR'] = int(m.group(1))
     macros['FN_VERSION_MINOR'] = int(m.group(2))
-  
+    version = f"v{m.group(1)}.{m.group(2)}-{m.group(5)}"
+
+  if modified:
+    version += "*"
+  macros['FN_VERSION_FULL'] = version
   macros['FN_VERSION_DATE'] = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
 
   cur_macros = load_version_macros(version_h_path)
@@ -111,7 +113,7 @@ def main():
     # FIXME - if args.update_version_h then update, don't print
     macro_defs = " ".join(macro_defs)
     print(macro_defs)
-    Path(version_h_path).touch()
+    #Path(version_h_path).touch()
 
   return
 

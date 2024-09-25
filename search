@@ -113,7 +113,7 @@ def main():
     cmd.extend(["-i"])
   if args.files_with_matches:
     cmd.extend(["-l"])
-  cmd.extend([args.phrase, "{}", ";"])
+  cmd.extend(["-e", args.phrase, "{}", ";"])
 
   try:
     subprocess.run(cmd)
