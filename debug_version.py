@@ -36,7 +36,9 @@ def get_commit_version():
   return run_command(["git", "describe", "HEAD"])
 
 def get_modified_files():
-  return run_command(["git", "diff", "--name-only"]).split("\n")
+  files = run_command(["git", "diff", "--name-only"]).split("\n")
+  files = [f for f in files if f]
+  return files
 
 def load_version_macros(path):
   txt = [line for line in open(path)]
@@ -92,7 +94,7 @@ def main():
   macros['FN_VERSION_DATE'] = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
 
   cur_macros = load_version_macros(version_h_path)
-  print(cur_macros, file=sys.stderr)
+  #print(cur_macros, file=sys.stderr)
   new_macros = cur_macros.copy()
   new_macros.update(macros)
 
