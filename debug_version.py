@@ -33,7 +33,7 @@ def is_fujinet_repo(base):
   return False
 
 def get_commit_version():
-  return run_command(["git", "describe", "HEAD"])
+  return run_command(["git", "describe", "--always", "HEAD"])
 
 def get_modified_files():
   files = run_command(["git", "diff", "--name-only"]).split("\n")
@@ -81,20 +81,25 @@ def main():
   macros = {
     'FN_VERSION_BUILD': commit_id_long,
   }
+  cur_macros = load_version_macros(version_h_path)
+  ver_major = int(cur_macros['FN_VERSION_MAJOR'])
+  ver_minor = int(cur_macros['FN_VERSION_MINOR'])
 
   m = re.match(r"^v([0-9]+)[.]([0-9]+)[.]([0-9]+)-([0-9]+)-g(.*)", version)
   if m:
-    macros['FN_VERSION_MAJOR'] = int(m.group(1))
-    macros['FN_VERSION_MINOR'] = int(m.group(2))
+    ver_major = macros['FN_VERSION_MAJOR'] = int(m.group(1))
+    ver_minor = macros['FN_VERSION_MINOR'] = int(m.group(2))
     version = f"v{m.group(1)}.{m.group(2)}-{m.group(5)}"
+  else:
+    m = re.match(r"^([a-z0-9]{8})$", version)
+    if m:
+      version = f"v{ver_major}.{ver_minor}-{version}"
 
   if modified:
     version += "*"
   macros['FN_VERSION_FULL'] = version
   macros['FN_VERSION_DATE'] = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M:%S")
 
-  cur_macros = load_version_macros(version_h_path)
-  #print(cur_macros, file=sys.stderr)
   new_macros = cur_macros.copy()
   new_macros.update(macros)
 
