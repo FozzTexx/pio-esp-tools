@@ -69,14 +69,11 @@ def main():
   modified = get_modified_files()
   commit_id_long = run_command(["git", "rev-parse", "HEAD"])
 
-  if modified:
-    mtime = None
-    for path in modified:
-      mt = os.path.getmtime(path)
-      if not mtime or mt > mtime:
-        mtime = mt
-  else:
-    mtime = int(run_command(["git", "show", "--no-patch", "--format=%ct", "HEAD"]))
+  mtime = int(run_command(["git", "show", "--no-patch", "--format=%ct", "HEAD"]))
+  for path in modified:
+    mt = os.path.getmtime(path)
+    if not mtime or mt > mtime:
+      mtime = mt
 
   macros = {
     'FN_VERSION_BUILD': commit_id_long,
