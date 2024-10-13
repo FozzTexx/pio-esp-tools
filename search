@@ -41,6 +41,10 @@ def dictify(array):
   return d
 
 def locate_espidf_dir():
+  if not os.path.exists(PLATFORMIO_INI) and not os.path.exists(PLATFORMIO_GEN):
+    print("Not in project directory")
+    exit(1)
+
   missing_ini = False
   if not os.path.exists(PLATFORMIO_INI):
     missing_ini = True
@@ -74,10 +78,6 @@ def main():
 
   args = build_argparser().parse_args()
 
-  if not os.path.exists(PLATFORMIO_INI) and not os.path.exists(PLATFORMIO_GEN):
-    print("Not in project directory")
-    exit(1)
-
   directory = args.directory
   if args.espidf:
     directory = locate_espidf_dir()
@@ -85,7 +85,6 @@ def main():
     FILE_TYPES= [".h", ]
 
   cmd = ["find", directory]
-
 
   cmd.extend([
     "-path", os.path.join(directory, ".git"), "-prune",
