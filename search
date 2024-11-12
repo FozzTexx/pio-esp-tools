@@ -12,18 +12,20 @@ PLATFORMIO_INI = "platformio.ini"
 PLATFORMIO_GEN = "platformio-generated.ini"
 PLATFORMIO_PKG_DIR = os.path.expanduser("~/.platformio/packages")
 FRAMEWORK = "framework-espidf"
-FILE_TYPES = [".c", ".h", ".cpp"]
+FILE_TYPES = [".c", ".h", ".cpp", ".s", ".asm"]
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("directory", nargs="?", default=".", help="directory to search")
-  parser.add_argument("phrase", help="phrase to search for")
+  parser.add_argument("pattern", help="pattern to search for")
   parser.add_argument("--espidf", action="store_true", help="search platformio espidf")
   parser.add_argument("--all", action="store_true", help="search all text files")
   parser.add_argument("--headers", action="store_true", help="search only .h files")
   parser.add_argument("-i", "--ignore-case", action="store_true", help="case insensitive")
   parser.add_argument("-l", "--files-with-matches", action="store_true",
                       help="list file names only")
+  parser.add_argument("-F", "--fixed-strings", action="store_true",
+                      help="Interpret pattern as fixed string, not regular expression.")
 
   return parser
 
@@ -112,7 +114,9 @@ def main():
     cmd.extend(["-i"])
   if args.files_with_matches:
     cmd.extend(["-l"])
-  cmd.extend(["-e", args.phrase, "{}", ";"])
+  if args.fixed_strings:
+    cmd.extend(["-F"])
+  cmd.extend(["-e", args.pattern, "{}", ";"])
 
   try:
     subprocess.run(cmd)

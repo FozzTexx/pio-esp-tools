@@ -14,7 +14,7 @@ BACKTRACER = "xtensa-esp32-elf-addr2line"
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  parser.add_argument("backtrace", nargs="+", help="input file")
+  parser.add_argument("backtrace", nargs="+", help="backtrace hex addresses")
   parser.add_argument("--flag", action="store_true", help="flag to do something")
   return parser
 
