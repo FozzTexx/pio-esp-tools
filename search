@@ -16,8 +16,8 @@ FILE_TYPES = [".c", ".h", ".cpp", ".s", ".asm"]
 
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  parser.add_argument("directory", nargs="?", default=".", help="directory to search")
   parser.add_argument("pattern", help="pattern to search for")
+  parser.add_argument("directory", nargs="?", default=".", help="directory to search")
   parser.add_argument("--espidf", action="store_true", help="search platformio espidf")
   parser.add_argument("--all", action="store_true", help="search all text files")
   parser.add_argument("--headers", action="store_true", help="search only .h files")
@@ -109,7 +109,7 @@ def main():
     ])
   cmd.append(")")
 
-  cmd.extend(["-exec", "grep", "-IHn"])
+  cmd.extend(["-exec", "grep", "-IHn", "-P"])
   if args.ignore_case:
     cmd.extend(["-i"])
   if args.files_with_matches:
