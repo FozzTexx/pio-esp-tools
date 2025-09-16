@@ -55,8 +55,15 @@ def locate_espidf_dir():
   cmd = ["platformio", "project", "config", "--json-output"]
   config = dictify(json.loads(subprocess.run(cmd, capture_output=True, text=True).stdout))
   #pprint(config)
-  platform = config['platformio']['default_envs'][0]
-  framework = config['env:' + platform]['platform']
+  if 'platformio' in config:
+    platform = config['platformio']['default_envs'][0]
+    env_platform = 'env:' + platform
+  else:
+    for key in config:
+      if key.startswith("env:"):
+        env_platform = key
+        break
+  framework = config[env_platform]['platform']
 
   cmd = ["platformio", "platform", "show", framework, "--json-output"]
   #print(cmd)

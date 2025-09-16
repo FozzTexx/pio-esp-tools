@@ -39,7 +39,12 @@ def get_platform():
 
   cmd = ["platformio", "project", "config", "--json-output"]
   config = dictify(json.loads(subprocess.run(cmd, capture_output=True, text=True).stdout))
-  platform = config['platformio']['default_envs'][0]
+  if 'platformio' in config:
+    platform = config['platformio']['default_envs'][0]
+  else:
+    for key in config:
+      if key.startswith("env:"):
+        platform = key[4:]
 
   if missing_ini:
     os.unlink(PLATFORMIO_INI)
