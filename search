@@ -17,7 +17,7 @@ FILE_TYPES = [".c", ".h", ".cpp", ".s", ".asm"]
 def build_argparser():
   parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("pattern", help="pattern to search for")
-  parser.add_argument("directory", nargs="?", default=".", help="directory to search")
+  parser.add_argument("directory", nargs="*", default=".", help="directory to search")
   parser.add_argument("--espidf", action="store_true", help="search platformio espidf")
   parser.add_argument("--all", action="store_true", help="search all text files")
   parser.add_argument("--headers", action="store_true", help="search only .h files")
@@ -89,16 +89,18 @@ def main():
 
   directory = args.directory
   if args.espidf:
-    directory = locate_espidf_dir()
+    directory = [locate_espidf_dir(), ]
   if args.headers:
     FILE_TYPES= [".h", ]
 
-  cmd = ["find", directory]
+  cmd = ["find", ]
+  if directory:
+    cmd += directory
 
   cmd.extend([
-    "-path", os.path.join(directory, ".git"), "-prune",
+    "-path", ".git", "-prune",
     "-o",
-    "-path", os.path.join(directory, ".pio"), "-prune",
+    "-path", ".pio", "-prune",
     "-o", "(",
   ])
   if not args.all:
