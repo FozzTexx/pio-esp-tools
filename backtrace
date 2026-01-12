@@ -9,7 +9,7 @@ import json
 
 PLATFORMIO_INI = "platformio.ini"
 PLATFORMIO_GEN = "platformio-generated.ini"
-PLATFORMIO_PATH = os.path.expanduser("~/.platformio/packages/toolchain-xtensa-esp32/bin")
+PLATFORMIO_PATH = os.path.expanduser("~/.platformio/packages/toolchain-xtensa-esp-elf/bin")
 BACKTRACER = "xtensa-esp32-elf-addr2line"
 
 def build_argparser():
